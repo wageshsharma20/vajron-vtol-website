@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>VTOL render</title>
+<style>html,body{margin:0;background:#000;overflow:hidden}canvas{display:block}</style>
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/"
+} }
+</script>
+</head>
+<body>
+<canvas id="c"></canvas>
+<script type="module">
+// Deterministic shot renderer. Frames must be requested in order within a
+// shot: rotor angles are integrated frame by frame.
+import * as THREE from 'three';
+import { createStage } from '../js/stage.js';
+import { buildVTOL, LAYOUT } from '../js/vtol.js';
+
+const canvas = document.getElementById('c');
+let S, vtol, W = 1920, H = 1080, FPS = 30, alpha = false;
+let streaks, floorMesh, bgTex, orthoCam;
+const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+const smooth = (a, b, t) => { const x = clamp((t - a) / (b - a), 0, 1); return x * x * (3 - 2 * x); };
+const lerp = (a, b, k) => a + (b - a) * k;
+const lerpV = (a, b, k) => a.map((v, i) => lerp(v, b[i], k));
+const TAU = Math.PI * 2;
+
+function gradientBackground() {
+  const cv = document.createElement('canvas'); cv.width = 1920; cv.height = 1080;
+  const c = cv.getContext('2d');
+  const g = c.createRadialGradient(960, 600, 40, 960, 600, 1150);
+  g.addColorStop(0, '#2c2c30'); g.addColorStop(0.42, '#121214'); g.addColorStop(1, '#000');
+  c.fillStyle = g; c.fillRect(0, 0, 1920, 1080);
+  const t = new THREE.CanvasTexture(cv); t.colorSpace = THREE.SRGBColorSpace;
+  return t;
+}
+
+// thin airflow streaks that stream past the aircraft to convey speed
+function makeStreaks() {
+  const N = 260, pos = new Float32Array(N * 6), seeds = [];
+  for (let i = 0; i < N; i++) seeds.push({ x: Math.random() * 8 - 4, y: Math.random() * 2.4 - 1.1, z: Math.random() * 5 - 2.5, l: 0.25 + Math.random() * 0.55 });
+  const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  const m = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0, depthWrite: false });
+  const lines = new THREE.LineSegments(g, m); lines.frustumCulled = false;
+  lines.userData = { seeds, offset: 0 };
+  return lines;
+}
+function updateStreaks(speed, dt) {
+  const u = streaks.userData; u.offset += speed * 7.5 * dt;
+  const p = streaks.geometry.attributes.position.array;
+  u.seeds.forEach((s, i) => {
+    let x = ((s.x - u.offset) % 8 + 8) % 8 - 4;
+    const L = s.l * (0.25 + speed);
+    p.set([x, s.y, s.z, x + L, s.y, s.z], i * 6);
+  });
+  streaks.geometry.attributes.position.needsUpdate = true;
+  streaks.material.opacity = 0.16 * speed;
+}
+
+// ---------------------------------------------------------------------
+// shots: each returns the state at time t (seconds)
+// state: cam, tgt, fov, y (aircraft height), roll, pitch, lift, push,
+//        stream (0..1), floor (bool), contact (bool), pan, tilt
+// ---------------------------------------------------------------------
+const SHOTS = {
+  launch: { dur: 4.0, f: (t) => ({
+    cam: lerpV([2.55, 0.2, 2.05], [2.2, 0.78, 1.8], smooth(0, 4, t)),
+    tgt: lerpV([0.0, -0.06, 0], [0.0, 0.72, 0], smooth(1.2, 4, t)),
+    fov: 30, y: 0.85 * smooth(1.4, 4.0, t), lift: smooth(0.3, 1.3, t), push: 0, stream: 0,
+    floor: true, contact: false, roll: 0, pitch: 0 }) },
+  hover: { dur: 3.5, f: (t) => {
+    const a = lerp(0.72, 1.55, smooth(0, 3.5, t));
+    return { cam: [2.95 * Math.cos(a), 0.38, 2.95 * Math.sin(a)], tgt: [-0.15, 0, 0], fov: 30,
+      y: 0.018 * Math.sin(t * 1.8), lift: 1, push: 0, stream: 0, floor: false, contact: false, roll: 0.01 * Math.sin(t * 1.3), pitch: 0 };
+  } },
+  transition: { dur: 3.8, f: (t) => ({
+    cam: lerpV([1.45, 0.36, 2.6], [0.4, 0.16, 2.95], smooth(0, 3.8, t)), tgt: [-0.12, 0.02, 0], fov: 30,
+    y: 0, lift: 1 - smooth(1.0, 2.8, t), push: smooth(0.0, 1.2, t), stream: smooth(0.3, 3.2, t),
+    floor: false, contact: false, roll: 0, pitch: -0.05 * Math.sin(Math.PI * smooth(0.4, 3.2, t)) }) },
+  cruise: { dur: 4.0, f: (t) => ({
+    cam: lerpV([1.85, -0.62, 1.45], [-0.55, -0.22, 2.25], smooth(0, 4, t)), tgt: [-0.1, 0.0, 0], fov: 32,
+    y: 0.01 * Math.sin(t * 1.4), lift: 0, push: 1, stream: 1, floor: false, contact: false,
+    roll: 0.07 * Math.sin(t * 0.9), pitch: 0.012 * Math.sin(t * 1.3) }) },
+  payload: { dur: 3.0, f: (t) => {
+    const a = lerp(0.62, -0.5, smooth(0, 3, t));
+    return { cam: [0.33 + 0.62 * Math.cos(a), -0.24, 0.62 * Math.sin(a)], tgt: [0.33, -0.13, 0], fov: 24,
+      y: 0, lift: 0, push: 1, stream: 0.55, floor: false, contact: false, roll: 0, pitch: 0,
+      pan: lerp(-0.55, 0.55, smooth(0.2, 2.8, t)), tilt: 0.18 * Math.sin(t * 2.1) };
+  } },
+  tail: { dur: 3.0, f: (t) => ({
+    cam: lerpV([-1.25, 0.58, 1.45], [-2.05, 0.3, -0.55], smooth(0, 3, t)), tgt: [-0.78, 0.14, 0], fov: 30,
+    y: 0, lift: 0, push: 1, stream: 0.8, floor: false, contact: false, roll: 0, pitch: 0 }) },
+  recovery: { dur: 5.0, f: (t) => ({
+    cam: lerpV([2.6, 1.15, 2.1], [2.3, 0.32, 1.9], smooth(0, 5, t)), tgt: lerpV([0, 0.75, 0], [0, 0.0, 0], smooth(1.8, 4.6, t)),
+    fov: 30, y: 0.9 * (1 - smooth(2.0, 4.3, t)), lift: smooth(0.4, 1.7, t) * (1 - smooth(4.35, 5.0, t)),
+    push: 1 - smooth(0, 1.5, t), stream: 1 - smooth(0, 2.0, t), floor: true, contact: false, roll: 0, pitch: 0 }) },
+  // seamless loops
+  orbit: { dur: 9.0, f: (t) => { const a = 0.75 + TAU * t / 9;
+    return { cam: [3.05 * Math.cos(a), 0.68, 3.05 * Math.sin(a)], tgt: [-0.2, -0.02, 0], fov: 30,
+      y: 0, lift: 0, push: 0, stream: 0, floor: false, contact: true, roll: 0, pitch: 0 }; } },
+  hoverloop: { dur: 6.0, f: (t) => { const a = 0.78 + 0.16 * Math.sin(TAU * t / 6);
+    return { cam: [2.85 * Math.cos(a), 0.42 + 0.05 * Math.sin(TAU * t / 6), 2.85 * Math.sin(a)], tgt: [-0.15, 0.02, 0], fov: 30,
+      y: 0.02 * Math.sin(TAU * t / 3), lift: 1, push: 0, stream: 0, floor: false, contact: false, roll: 0.012 * Math.sin(TAU * t / 6), pitch: 0 }; } },
+  gimballoop: { dur: 6.0, f: (t) => ({
+    cam: [0.33 + 0.6 * Math.cos(0.5 + 0.12 * Math.sin(TAU * t / 6)), -0.23, 0.6 * Math.sin(0.5 + 0.12 * Math.sin(TAU * t / 6))],
+    tgt: [0.33, -0.13, 0], fov: 23, y: 0, lift: 0, push: 0, stream: 0, floor: false, contact: false, roll: 0, pitch: 0,
+    pan: 0.55 * Math.sin(TAU * t / 6), tilt: 0.14 * Math.sin(TAU * 2 * t / 6) }) },
+  rotorloop: { dur: 4.0, f: (t) => ({ cam: [0.95, 0.42, 0.95], tgt: [0.43, 0.13, 0.36], fov: 26,
+    y: 0, lift: 1, push: 0, stream: 0, floor: false, contact: false, roll: 0, pitch: 0 }) },
+  pusherloop: { dur: 4.0, f: (t) => ({ cam: [-1.05, 0.2, 0.72], tgt: [-0.44, 0.03, 0], fov: 28,
+    y: 0, lift: 0, push: 1, stream: 0.4, floor: false, contact: false, roll: 0, pitch: 0 }) },
+  // stills
+  hero:   { dur: 0, f: () => ({ cam: [2.35, 0.95, 2.05], tgt: [-0.18, 0.0, 0], fov: 30, y: 0, lift: 0, push: 0, stream: 0, floor: false, contact: true }) },
+  hover3q:{ dur: 0, f: () => ({ cam: [2.1, 0.55, 1.9], tgt: [-0.16, 0.02, 0], fov: 30, y: 0, lift: 1, push: 0, stream: 0, floor: false, contact: false }) },
+  under:  { dur: 0, f: () => ({ cam: [1.55, -0.95, 1.2], tgt: [0.1, -0.05, 0], fov: 30, y: 0, lift: 0, push: 0, stream: 0, floor: false, contact: false }) },
+  nose:   { dur: 0, f: () => ({ cam: [1.0, 0.02, 0.28], tgt: [0.52, -0.02, 0], fov: 24, y: 0, lift: 0, push: 0, stream: 0, floor: false, contact: false }) },
+  gimbal2: { dur: 0, f: () => ({ cam: [0.78, -0.36, -0.36], tgt: [0.33, -0.13, 0.0], fov: 24, y: 0, lift: 0, push: 0, stream: 0, floor: false, contact: false, pan: -0.35, tilt: 0.1 }) },
+  tailstill: { dur: 0, f: () => ({ cam: [-1.75, 0.62, 1.25], tgt: [-0.82, 0.16, 0], fov: 28, y: 0, lift: 0, push: 0, stream: 0, floor: false, contact: false }) },
+  // orthographic views for drawings
+  plan:  { dur: 0, ortho: 'top' },
+  side:  { dur: 0, ortho: 'side' },
+  front: { dur: 0, ortho: 'front' },
+};
+
+let shot = null, lastT = 0, angleL = 0, angleP = 0;
+function applyState(st, dt) {
+  const g = vtol.group;
+  g.position.y = st.y || 0;
+  g.rotation.set(st.roll || 0, 0, st.pitch || 0);
+  // rotor speeds (deterministic, integrated per frame)
+  const rot = vtol.parts.rotors, pus = vtol.parts.pusher, M = vtol.materials;
+  const SPIN = 38;
+  rot.forEach((r, i) => {
+    r.speed = st.lift || 0;
+    r.angle += r.dir * SPIN * r.speed * dt;
+    if (r.speed < 0.02) r.angle = Math.round(r.angle / Math.PI) * Math.PI;
+    r.prop.rotation.y = r.angle;
+    r.disc.material.opacity = clamp((r.speed - 0.25) / 0.5, 0, 1) * 0.9;
+    r.prop.userData.blades.forEach((b) => { b.material = r.speed > 0.6 ? M.carbonFade : M.carbon; });
+  });
+  pus.speed = st.push || 0;
+  pus.angle += SPIN * 1.2 * pus.speed * dt;
+  pus.prop.rotation.y = pus.angle;
+  pus.disc.material.opacity = clamp((pus.speed - 0.25) / 0.5, 0, 1) * 0.9;
+  pus.prop.userData.blades.forEach((b) => { b.material = pus.speed > 0.6 ? M.carbonFade : M.carbon; });
+  vtol.aimGimbal(st.pan || 0, st.tilt || 0);
+  floorMesh.visible = !!st.floor;
+  S.contact.visible = !!st.contact;
+  S.key.castShadow = !!st.floor;
+  updateStreaks(st.stream || 0, dt);
+  S.camera.fov = st.fov || 30;
+  S.camera.position.set(...st.cam);
+  S.camera.lookAt(...st.tgt);
+  S.camera.updateProjectionMatrix();
+}
+
+function setOrtho(kind) {
+  vtol.snap('idle'); vtol.group.position.set(0, 0, 0); vtol.group.rotation.set(0, 0, 0);
+  S.contact.visible = false; floorMesh.visible = false; streaks.material.opacity = 0;
+  const box = new THREE.Box3().setFromObject(vtol.group);
+  const size = box.getSize(new THREE.Vector3()), c = box.getCenter(new THREE.Vector3());
+  const aspect = W / H, pad = 1.06;
+  let w, h;
+  if (kind === 'top') { w = size.z; h = size.x; }
+  else if (kind === 'side') { w = size.x; h = size.y; }
+  else { w = size.z; h = size.y; }
+  let halfW = (w * pad) / 2, halfH = (h * pad) / 2;
+  if (halfW / halfH < aspect) halfW = halfH * aspect; else halfH = halfW / aspect;
+  orthoCam = new THREE.OrthographicCamera(-halfW, halfW, halfH, -halfH, 0.01, 20);
+  if (kind === 'top') { orthoCam.position.set(c.x, 6, c.z); }   // nose points up the page
+  else if (kind === 'side') { orthoCam.position.set(c.x, c.y, 6); }
+  else { orthoCam.position.set(6, c.y, c.z); }
+  orthoCam.lookAt(c);
+  if (kind === 'top') { orthoCam.up.set(1, 0, 0); orthoCam.lookAt(c); }
+  orthoCam.updateProjectionMatrix();
+}
+
+window.R = {
+  ready: false,
+  async init(cfg = {}) {
+    W = cfg.w || 1920; H = cfg.h || 1080; FPS = cfg.fps || 30; alpha = !!cfg.alpha;
+    canvas.width = W; canvas.height = H; canvas.style.width = W + 'px'; canvas.style.height = H + 'px';
+    S = createStage(canvas, { alpha, capture: true, pixelRatio: cfg.pr || 1, envIntensity: cfg.env ?? 0.62 });
+    S.resize(W, H);
+    vtol = buildVTOL(THREE);
+    S.scene.add(vtol.group);
+    // grey studio floor that fades into black, for ground shots
+    floorMesh = new THREE.Mesh(new THREE.CircleGeometry(9, 96), new THREE.MeshStandardMaterial({ color: 0x0e0e10, roughness: 0.92, metalness: 0 }));
+    floorMesh.rotation.x = -Math.PI / 2; floorMesh.position.y = -0.2118; floorMesh.receiveShadow = true; floorMesh.visible = false;
+    S.scene.add(floorMesh);
+    if (!alpha) { bgTex = gradientBackground(); S.scene.background = bgTex; S.scene.fog = new THREE.Fog(0x000000, 3.4, 8.5); }
+    streaks = makeStreaks(); S.scene.add(streaks);
+    return { w: W, h: H };
+  },
+  shot(name) {
+    shot = SHOTS[name]; lastT = 0;
+    vtol.parts.rotors.forEach((r, i) => { r.angle = i * 0.9; });
+    vtol.parts.pusher.angle = 0.3;
+    if (shot.ortho) setOrtho(shot.ortho);
+    return shot.dur;
+  },
+  at(t, type = 'image/jpeg', q = 0.93) {
+    const dt = shot.dur ? Math.max(0, t - lastT) : 0;
+    lastT = t;
+    if (shot.ortho) S.renderer.render(S.scene, orthoCam);
+    else { applyState(shot.f(t), dt); S.render(); }
+    return canvas.toDataURL(type, q);
+  },
+  shots: Object.keys(SHOTS),
+  // after an ortho shot: project world points to 0..1 of the model's silhouette box
+  project(points) {
+    const box = new THREE.Box3().setFromObject(vtol.group, true);
+    const cam = orthoCam; cam.updateMatrixWorld();
+    const corners = [];
+    for (const x of [box.min.x, box.max.x]) for (const y of [box.min.y, box.max.y]) for (const z of [box.min.z, box.max.z]) corners.push(new THREE.Vector3(x, y, z).project(cam));
+    const xs = corners.map((c) => c.x), ys = corners.map((c) => c.y);
+    const [x0, x1, y0, y1] = [Math.min(...xs), Math.max(...xs), Math.min(...ys), Math.max(...ys)];
+    return points.map(([x, y, z]) => { const p = new THREE.Vector3(x, y, z).project(cam); return [+(((p.x - x0) / (x1 - x0)) * 100).toFixed(2), +(((y1 - p.y) / (y1 - y0)) * 100).toFixed(2)]; });
+  },
+};
+window.R.ready = true;
+</script>
+</body>
+</html>

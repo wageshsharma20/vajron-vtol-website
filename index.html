@@ -835,6 +835,30 @@ button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:poin
 .contact .ct p.lede{color:#DCE6F3}
 .contact .ct__card > div{background:rgba(255,255,255,.1);box-shadow:inset 0 0 0 1px rgba(255,255,255,.22)}
 .contact .ct__card dt{color:#BFD0E8}
+/* ---------- v3: a little more VAJRON blue ---------- */
+/* hero: a deep blue glow behind the aircraft */
+.hero__bg{background:
+  radial-gradient(52% 48% at 50% 62%,rgba(42,92,172,.40) 0%,rgba(18,56,110,.16) 46%,rgba(0,0,0,0) 74%),
+  radial-gradient(130% 90% at 50% 0%,#0D1726 0%,#070A10 52%,#000 100%)}
+.hero__bg::before{background:radial-gradient(circle,rgba(90,140,215,.09),rgba(0,0,0,0) 60%)}
+.hero__word{background:linear-gradient(180deg,rgba(143,178,230,.2) 10%,rgba(143,178,230,.02) 85%);-webkit-background-clip:text;background-clip:text}
+.hero__actions .btn--light{background:var(--blue);color:#fff;box-shadow:0 12px 30px rgba(18,56,110,.55),inset 0 0 0 1px rgba(143,178,230,.35)}
+@media (hover:hover){.hero__actions .btn--light:hover{background:var(--blue-hover)}}
+/* film and chapter openers carry blue accents */
+.film{background:linear-gradient(180deg,#000 0%,#050C18 45%,#081426 100%)}
+.film .eyebrow,.chapter__title .eyebrow{color:#8FB2E6}
+.chapters button[aria-current="true"]{background:rgba(18,56,110,.6)}
+.chapters__bar{background:rgba(143,178,230,.22)}
+.chapters__bar i{background:#8FB2E6}
+.chapter__foot span{background:rgba(18,56,110,.66);box-shadow:inset 0 0 0 1px rgba(143,178,230,.42)}
+/* cooler light grey, blue labels */
+.light{background:#EDF2FA}
+:is(.light,.white) .tile__k{color:var(--blue)}
+:is(.light,.white) .ds__tabs button:not([aria-selected="true"]) span{color:var(--blue)}
+:is(.light,.white) .head h2::after{content:"";display:block;width:3rem;height:4px;border-radius:4px;background:var(--blue);margin-top:1.1rem}
+:is(.light,.white) .head--center h2::after{margin-inline:auto}
+/* footer in deep navy */
+.foot{background:#06122A;color:#9DB0CC}
 /* THEME-V2-END */
 </style>
 </head>

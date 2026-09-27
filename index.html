@@ -749,6 +749,93 @@ button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:poin
 .mode-copy .trio dd.word{font-size:clamp(1.05rem,.8rem + .6vw,1.35rem);white-space:normal;line-height:1.1}
 /* chapter titles never outgrow the space above the video */
 .chapter__title h2{font-size:min(clamp(2.2rem,1.1rem + 3vw,4.4rem),7svh)}
+
+/* THEME-V2-START */
+/* =====================================================================
+   PALETTE v2: more white, more VAJRON blue
+   Hero, film and chapter openers stay black. Reading sections sit on
+   white and a cool light grey, the key-figure band and the contact
+   section carry the logo blue (#12386E), and blue marks every accent.
+   ===================================================================== */
+:root{--light-bg:#F3F6FB;--line-b:#E1E7F0;--blue-2:#0F2F5E}
+.light{background:var(--light-bg);color:var(--ink)}
+.white{background:#fff;color:var(--ink)}
+.light .eyebrow,.white .eyebrow{color:var(--blue)}
+.white .head__lede{color:var(--ink-2)}
+:is(.light,.white) .figcap{color:var(--ink-3)}
+
+/* key figures on a VAJRON blue band */
+.figs-strip{background:linear-gradient(180deg,#12386E 0%,#0F2F5E 100%)}
+.figs-strip .figs{border-top-color:rgba(255,255,255,.18);border-bottom-color:rgba(255,255,255,.18)}
+.figs-strip .figs > div + div::before{background:rgba(255,255,255,.2)}
+.figs-strip .figs > div{border-top-color:rgba(255,255,255,.18)!important}
+.figs-strip .figs dt{color:#D6E0EE}
+.figs-strip .figs dd{color:#fff}
+.figs-strip .figs dd small,.figs-strip .figs dd .pre{color:#BFD0E8}
+.figs-strip .figs-note{color:#BFD0E8}
+@media (max-width:639px){.figs-strip .figs > div:nth-child(even){box-shadow:inset 1px 0 0 rgba(255,255,255,.2)}}
+
+/* header and menu: active item in blue */
+.nav__links a[aria-current="true"],.sheet__card a[aria-current="true"]{color:var(--blue);background:var(--blue-tint)}
+@media (hover:hover){.nav__links a[aria-current="true"]:hover{background:var(--blue-tint)}}
+
+/* outline button in blue on light grounds */
+.btn--ink{color:var(--blue);background:#fff;box-shadow:inset 0 0 0 1.5px var(--blue)}
+@media (hover:hover){.btn--ink:hover{background:var(--blue-tint)}}
+
+/* ---------- cards and panels on light grounds ---------- */
+.light :is(.panel,.card,.gs > div,.app,.kit,.roadmap li,.trio > div,.pfigs > div,.inc > li){background:#fff;color:var(--ink);
+  box-shadow:0 1px 2px rgba(14,44,87,.04),0 14px 34px rgba(14,44,87,.07),inset 0 0 0 1px var(--line-b)}
+.white :is(.panel,.card,.gs > div,.app,.kit,.roadmap li,.trio > div,.pfigs > div,.inc > li){background:#F7F9FC;color:var(--ink);
+  box-shadow:inset 0 0 0 1px var(--line-b)}
+:is(.light,.white) :is(.card p,.gs p,.app p,.roadmap p,.mode-copy p,.seq span,.panel p){color:var(--ink-2)}
+:is(.light,.white) .panel > h3{color:var(--ink)}
+@media (hover:hover){:is(.light,.white) .app:hover{box-shadow:0 26px 54px rgba(14,44,87,.14),inset 0 0 0 1px var(--line-b)}}
+/* numbered sequence */
+:is(.light,.white) .seq::before{background:var(--line-b)}
+:is(.light,.white) .seq::after{background:var(--blue)}
+.js-motion :is(.light,.white) .panel:not(.in) .seq li::before{background:#fff;color:var(--ink-3);box-shadow:inset 0 0 0 2px #CBD6E6}
+/* interlocks and status pills */
+:is(.light,.white) .lock li{border-bottom-color:var(--line-b)}
+:is(.light,.white) .st--stop{background:#FDECEB;color:#B42A22}
+:is(.light,.white) .st--warn{background:#FFF4E0;color:#92560A}
+:is(.light,.white) .st--go{background:var(--blue-tint);color:var(--blue)}
+/* figures */
+:is(.light,.white) .trio dd{color:var(--blue)}
+:is(.light,.white) .trio dd small{color:var(--blue);opacity:.75}
+:is(.light,.white) .trio dt{color:var(--ink-2)}
+:is(.light,.white) .pfigs dd{color:var(--ink)}
+:is(.light,.white) .pfigs dd small{color:var(--blue)}
+:is(.light,.white) .pfigs dt{color:var(--ink-2)}
+/* ticks and chips */
+:is(.light,.white) .ticks li::before{background:var(--blue-tint) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M4 8.4l2.6 2.6L12 5.6' fill='none' stroke='%2312386E' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/1rem no-repeat}
+:is(.light,.white) .chips li{background:var(--blue-tint);color:var(--blue)}
+:is(.light,.white) .kit figcaption{color:var(--ink-3);border-top-color:var(--line-b)}
+:is(.light,.white) .roadmap .k{color:var(--blue)}
+/* segmented switch */
+:is(.light,.white) .seg{background:#EEF2F8;box-shadow:inset 0 0 0 1px var(--line-b)}
+:is(.light,.white) .seg button{color:var(--ink-2)}
+:is(.light,.white) .seg button[aria-pressed="true"]{color:#fff}
+@media (hover:hover){:is(.light,.white) .seg button[aria-pressed="false"]:hover{color:var(--ink);background:#fff}}
+/* media cards that stay dark keep their own light text */
+:is(.light,.white) :is(.diagram,.chart,.arch,.views figure,.shot){color:var(--on-dark)}
+/* copy over video bands keeps its light eyebrow */
+:is(.light,.white) .band__copy .eyebrow{color:var(--grey-200)}
+/* softer shadows under media on light grounds */
+:is(.light,.white) :is(.pl__media,.pw__media){box-shadow:0 24px 60px rgba(14,44,87,.18)}
+:is(.light,.white) :is(.chart,.arch,.diagram,.views figure){box-shadow:0 18px 44px rgba(14,44,87,.12)}
+/* datasheet */
+.ds-group{background:var(--light-bg);box-shadow:inset 0 0 0 1px var(--line-b)}
+@media (orientation:portrait) and (min-width:640px), (max-width:900px){.ds__tabs button{background:#EAEFF6}}
+
+/* contact in VAJRON blue */
+.contact{background:
+  radial-gradient(60% 80% at 80% 40%,rgba(90,140,210,.35),rgba(90,140,210,0) 60%),
+  linear-gradient(135deg,#0A2146 0%,#12386E 50%,#1A4C8E 100%)}
+.contact .ct p.lede{color:#DCE6F3}
+.contact .ct__card > div{background:rgba(255,255,255,.1);box-shadow:inset 0 0 0 1px rgba(255,255,255,.22)}
+.contact .ct__card dt{color:#BFD0E8}
+/* THEME-V2-END */
 </style>
 </head>
 <body>
@@ -888,7 +975,7 @@ button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:poin
     </div>
   </div>
 
-  <div class="sec sh-1">
+  <div class="sec white">
     <div class="wrap">
       <div class="modes">
         <div class="modes__view" data-reveal>
@@ -974,7 +1061,7 @@ button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:poin
 </section>
 
 <!-- ========================= GENERAL ARRANGEMENT ========================= -->
-<section class="sec sh-1" id="arrangement" aria-labelledby="ga-title" style="padding-top:0">
+<section class="sec light" id="arrangement" aria-labelledby="ga-title">
   <div class="wrap">
     <header class="head head--center" data-reveal>
       <p class="eyebrow">General arrangement</p>
@@ -1030,7 +1117,7 @@ button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:poin
     </div>
   </div>
 
-  <div class="sec sh-1">
+  <div class="sec white">
     <div class="wrap">
       <div class="channels">
         <article class="card" data-reveal>
@@ -1088,7 +1175,7 @@ button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:poin
     </div>
   </div>
 
-  <div class="sec sh-1">
+  <div class="sec white">
     <div class="wrap">
       <div class="av2">
         <div class="panel" data-reveal>
@@ -1172,7 +1259,7 @@ button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:poin
 </section>
 
 <!-- ============================== SECURITY ============================= -->
-<section class="sec sh-2" id="security" aria-labelledby="se-title">
+<section class="sec light" id="security" aria-labelledby="se-title">
   <div class="wrap">
     <header class="head head--center" data-reveal>
       <p class="eyebrow">Secure communications</p>
@@ -1491,7 +1578,7 @@ button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:poin
 </section>
 
 <!-- ============================== ROADMAP ============================== -->
-<section class="sec sh-2" id="roadmap" aria-labelledby="rm-title">
+<section class="sec light" id="roadmap" aria-labelledby="rm-title">
   <div class="wrap">
     <header class="head head--center" data-reveal>
       <p class="eyebrow">In development</p>

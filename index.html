@@ -10,7 +10,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="VAJRON VTOL">
-<meta property="og:title" content="VAJRON VTOL">
+<meta property="og:title" content="VAJRON AI Surveillance VTOL">
 <meta property="og:description" content="Long-endurance VTOL surveillance drone: vertical take-off, fixed-wing range, tri-sensor AI payload, anti-jam communications.">
 <meta property="og:image" content="assets/og-image.jpg">
 <meta property="og:type" content="website">
@@ -859,6 +859,34 @@ button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:poin
 :is(.light,.white) .head--center h2::after{margin-inline:auto}
 /* footer in deep navy */
 .foot{background:#06122A;color:#9DB0CC}
+/* ---------- v4: fewer template-style details ---------- */
+/* the product name in solid white rather than gradient text */
+.hero__title .brand{background:none;-webkit-background-clip:border-box;background-clip:border-box;color:#fff}
+/* no accent bar under section headings */
+:is(.light,.white) .head h2::after{content:none}
+/* chapter details as one plain caption line rather than pill chips */
+.chapter__foot{gap:0}
+html .chapter__foot span{background:none;box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none;border-radius:0;padding:.15rem .95rem;font-weight:600;color:rgba(255,255,255,.92);text-shadow:0 1px 14px rgba(0,0,0,.65)}
+html .chapter__foot span + span{box-shadow:inset 1px 0 0 rgba(255,255,255,.38)}
+/* short rule bullets rather than circled check marks */
+.ticks li{grid-template-columns:.95rem 1fr;gap:.7rem}
+html .ticks li::before{width:.75rem;height:2px;border-radius:2px;margin-top:.74em;background:rgba(255,255,255,.7)}
+html :is(.light,.white) .ticks li::before{background:var(--blue)}
+html .onreq .ticks li::before{background:#fff}
+/* icons on their own, without tinted tiles */
+html .ico.ico{width:auto;height:auto;background:none;border-radius:0;display:block;place-items:start;justify-items:start}
+html .ico.ico svg{width:1.75rem;height:1.75rem}
+html :is(.light,.white) .ico.ico,html .role .ico.ico{color:var(--blue)}
+/* interaction hint as plain text */
+.hero__hint{background:none}
+/* contact card with the email and phone row */
+.ct__card--4{grid-template-columns:repeat(3,minmax(0,1fr))}
+.ct__card--4 > div:last-child{grid-column:1/-1}
+.ct__card a{color:#fff}
+@media (orientation:portrait) and (min-width:640px), (max-width:900px){.ct__card--4{grid-template-columns:repeat(2,minmax(0,1fr))}.ct__card--4 > div:nth-child(3){grid-column:1/-1}}
+@media (max-width:639px){.ct__card--4{grid-template-columns:1fr}}
+/* chapter titles never outgrow the space above the video */
+.chapter__title h2{font-size:min(clamp(2.2rem,1.1rem + 3vw,4.4rem),7svh)}
 /* THEME-V2-END */
 </style>
 </head>
@@ -904,7 +932,7 @@ button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:poin
   <div class="hero__inner">
     <div class="hero__copy">
       <h1 class="hero__title" id="hero-title"><span class="brand">VAJRON</span> AI Surveillance&nbsp;VTOL</h1>
-      <p class="hero__lede">Long-endurance surveillance that needs no runway.</p>
+      <p class="hero__lede">Hours of endurance, onboard AI, and no runway needed.</p>
       <div class="hero__actions x-hide">
         <a class="btn btn--light" href="#film-player" data-film-play>
           <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M5 3.2v9.6c0 .5.5.8.9.5l7.4-4.8a.6.6 0 0 0 0-1L5.9 2.7c-.4-.3-.9 0-.9.5z"/></svg>
@@ -913,7 +941,7 @@ button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:poin
     </div>
 
     <div class="hero__stage">
-      <span class="hero__word" aria-hidden="true">VTOL</span>
+      <span class="hero__word" aria-hidden="true">VAJRON</span>
       <span class="hero__shadow" aria-hidden="true"></span>
       <div class="hero__craft" id="craft">
         <div class="hero__float">
@@ -921,10 +949,10 @@ button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:poin
             <source type="image/webp" srcset="assets/render/hero-760.webp 760w, assets/render/hero-1200.webp 1200w, assets/render/hero-2000.webp 2000w"
                     sizes="(orientation: portrait) 92vw, 64vw">
             <img src="assets/render/hero-1200.png" width="1200" height="708" fetchpriority="high" decoding="async"
-                 alt="Concept render of the VAJRON VTOL: white fixed-wing airframe with upturned wingtips, four vertical-lift rotors on twin booms, an inverted-U tail and a gimbal under the nose.">
+                 alt="Concept render of the VAJRON AI Surveillance VTOL: white fixed-wing airframe with upturned wingtips, four vertical-lift rotors on twin booms, an inverted-U tail and a gimbal under the nose.">
           </picture>
         </div>
-        <canvas class="hero__gl" id="hero-gl" aria-label="Interactive 3D model of the VAJRON VTOL. Drag sideways to turn it." role="img"></canvas>
+        <canvas class="hero__gl" id="hero-gl" aria-label="Interactive 3D model of the VAJRON AI Surveillance VTOL. Drag sideways to turn it." role="img"></canvas>
       </div>
       <p class="hero__hint x-hide" id="hero-hint" aria-hidden="true">
         <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 7 3 10l3 3M14 7l3 3-3 3M3 10h14"/></svg>
@@ -961,7 +989,7 @@ button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:poin
       <div class="player__screen" id="film-player">
         <video class="player__video" muted playsinline loop preload="none" poster="assets/video/film-poster.jpg"
                data-src="assets/video/film-1920.mp4" data-src-small="assets/video/film-1280.mp4" data-autoplay
-               aria-label="Rendered concept film of the VAJRON VTOL: vertical take-off, hover, transition, cruise, payload, tail and vertical landing"></video>
+               aria-label="Rendered concept film of the VAJRON AI Surveillance VTOL: vertical take-off, hover, transition, cruise, payload, tail and vertical landing"></video>
         <div class="player__shade" aria-hidden="true"></div>
         <div class="player__cap" aria-live="polite">
           <span class="player__num">00</span>
@@ -1005,7 +1033,7 @@ button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:poin
         <div class="modes__view" data-reveal>
           <img src="assets/render/hover3q-1200.png" srcset="assets/render/hover3q-760.webp 760w, assets/render/hover3q-1200.webp 1200w, assets/render/hover3q-2000.webp 2000w"
                sizes="(orientation: portrait) 92vw, 55vw" width="1200" height="527" loading="lazy" decoding="async"
-               alt="Concept render of the VAJRON VTOL with its four lift rotors spinning.">
+               alt="Concept render of the VAJRON AI Surveillance VTOL with its four lift rotors spinning.">
           <canvas aria-label="Interactive 3D model showing the selected flight mode. Drag sideways to turn it." role="img"></canvas>
         </div>
         <div data-reveal style="--i:1">
@@ -1050,7 +1078,7 @@ button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:poin
       <figure class="diagram" style="margin-top:clamp(3rem,6vw,5rem)" data-reveal data-live>
         <div class="diagram__head"><h3>Mission profile</h3><p>Schematic, not to scale</p></div>
         <svg viewBox="0 0 1200 360" role="img" aria-labelledby="pr-t pr-d" data-smil>
-          <title id="pr-t">Mission profile of the VAJRON VTOL</title>
+          <title id="pr-t">Mission profile of the VAJRON AI Surveillance VTOL</title>
           <desc id="pr-d">The aircraft takes off vertically from an unprepared site, transitions to fixed-wing cruise for about 3.8 hours and about 209 kilometres per sortie, transitions back and lands vertically.</desc>
           <defs>
             <linearGradient id="prg" x1="0" x2="1"><stop offset="0" stop-color="#F5F5F7" stop-opacity=".25"/><stop offset=".5" stop-color="#F5F5F7" stop-opacity=".9"/><stop offset="1" stop-color="#F5F5F7" stop-opacity=".25"/></linearGradient>
@@ -1097,7 +1125,7 @@ button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:poin
         <div class="ga__img">
           <img src="assets/render/side-1000.png" srcset="assets/render/side-1000.webp 1000w, assets/render/side-1800.webp 1800w"
                sizes="(max-width:1400px) 92vw, 80rem" width="1000" height="328" loading="lazy" decoding="async"
-               alt="Side view of the VAJRON VTOL concept: fixed wing, vertical-lift rotors on a boom, pusher propeller at the fuselage tail, inverted-U tail, gimbal under the nose and sensor visor on the nose.">
+               alt="Side view of the VAJRON AI Surveillance VTOL concept: fixed wing, vertical-lift rotors on a boom, pusher propeller at the fuselage tail, inverted-U tail, gimbal under the nose and sensor visor on the nose.">
           <span class="pin" style="left:62.7%;top:37.7%;--i:0" aria-hidden="true">01</span>
           <span class="pin" style="left:88.0%;top:33.6%;--i:1" aria-hidden="true">02</span>
           <span class="pin" style="left:32.9%;top:55.1%;--i:2" aria-hidden="true">03</span>
@@ -1118,8 +1146,8 @@ button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:poin
       </div>
     </div>
     <div class="views">
-      <figure data-reveal><img src="assets/render/plan-1000.png" srcset="assets/render/plan-1000.webp 1000w, assets/render/plan-1800.webp 1800w" sizes="(orientation: portrait) 92vw, 36vw" width="1000" height="810" loading="lazy" decoding="async" alt="Plan view of the VAJRON VTOL concept from above, nose up."><figcaption>Plan view</figcaption></figure>
-      <figure data-reveal style="--i:1"><img src="assets/render/front-1000.png" srcset="assets/render/front-1000.webp 1000w, assets/render/front-1800.webp 1800w" sizes="(orientation: portrait) 92vw, 50vw" width="1000" height="266" loading="lazy" decoding="async" alt="Front view of the VAJRON VTOL concept showing the wing with upturned tips, the inverted-U tail and the sensor visor."><figcaption>Front view</figcaption></figure>
+      <figure data-reveal><img src="assets/render/plan-1000.png" srcset="assets/render/plan-1000.webp 1000w, assets/render/plan-1800.webp 1800w" sizes="(orientation: portrait) 92vw, 36vw" width="1000" height="810" loading="lazy" decoding="async" alt="Plan view of the VAJRON AI Surveillance VTOL concept from above, nose up."><figcaption>Plan view</figcaption></figure>
+      <figure data-reveal style="--i:1"><img src="assets/render/front-1000.png" srcset="assets/render/front-1000.webp 1000w, assets/render/front-1800.webp 1800w" sizes="(orientation: portrait) 92vw, 50vw" width="1000" height="266" loading="lazy" decoding="async" alt="Front view of the VAJRON AI Surveillance VTOL concept showing the wing with upturned tips, the inverted-U tail and the sensor visor."><figcaption>Front view</figcaption></figure>
     </div>
     <p class="figcap x-hide">Concept renders. Not to scale.</p>
   </div>
@@ -1164,7 +1192,7 @@ button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:poin
       <div class="pl" style="margin-top:clamp(3rem,6vw,5rem)">
         <figure class="shot" data-reveal style="min-height:0;aspect-ratio:16/10">
           <img src="assets/render/gimbal-1600.jpg" srcset="assets/render/gimbal-900.jpg 900w, assets/render/gimbal-1600.jpg 1600w" sizes="(orientation: portrait) 92vw, 52vw" width="1600" height="900" loading="lazy" decoding="async"
-               alt="Concept render from below: the tri-sensor gimbal under the fuselage of the VAJRON VTOL.">
+               alt="Concept render from below: the tri-sensor gimbal under the fuselage of the VAJRON AI Surveillance VTOL.">
           <figcaption>Concept render</figcaption>
         </figure>
         <div data-reveal style="--i:1">
@@ -1481,7 +1509,7 @@ button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:poin
     <div class="ds-top" data-reveal>
       <header class="head">
         <p class="eyebrow">Technical specifications</p>
-        <h2 id="spec-title">VAJRON VTOL datasheet</h2>
+        <h2 id="spec-title">VAJRON AI Surveillance VTOL datasheet</h2>
         <p class="head__lede x-hide">Class-level targets, validated against internal weight and power budget, inclusive of reserved shielding allowance.</p>
       </header>
       <button class="btn btn--ink" type="button" data-print>
@@ -1637,10 +1665,11 @@ button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:poin
         </picture>
       </div>
     </div>
-    <dl class="ct__card" data-reveal>
+    <dl class="ct__card ct__card--4" data-reveal>
       <div><dt>Manufacturer</dt><dd>VAJRON Global Tech Pvt. Ltd.</dd></div>
-      <div><dt>Product</dt><dd>VAJRON VTOL, long-endurance surveillance drone</dd></div>
+      <div><dt>Product</dt><dd>VAJRON AI Surveillance VTOL, long-endurance drone</dd></div>
       <div><dt>Web</dt><dd><a href="https://www.vajronglobaltech.com" rel="noopener">www.vajronglobaltech.com</a></dd></div>
+      <div><dt>Email and phone</dt><dd><a href="mailto:info@vajronglobaltech.com">info@vajronglobaltech.com</a> &#183; <a href="tel:+919818805137">+91 98188 05137</a></dd></div>
     </dl>
   </div>
 </section>
